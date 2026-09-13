@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bethel Fontibón | Auditoría y Seguimiento</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5.0.19/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/index.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#1a2942;--primary-light:#2d4263;
+  --accent:#c9a961;--accent-dark:#a8883f;
+  --bg:#e8ecf1;--card:#f7f8fa;--card-alt:#ffffff;
+  --text:#1a1a1a;--text-light:#5a6472;
+  --border:#d8dde3;
+  --success:#10b981;--success-bg:#d1fae5;--success-text:#065f46;
+  --warning:#f59e0b;--warning-bg:#fef3c7;--warning-text:#92400e;
+  --danger:#dc2626;--danger-bg:#fee2e2;--danger-text:#991b1b;
+  --info-bg:#dbeafe;--info-text:#1e40af;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+h1,h2,h3{font-family:'Playfair Display',serif}
+
+.header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:20px 40px;box-shadow:0 4px 20px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:15px;cursor:pointer}
+.logo-icon{width:48px;height:48px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:bold;font-size:24px;color:var(--primary)}
+.logo-text h1{font-size:22px;letter-spacing:1px}
+.logo-text p{font-size:12px;opacity:.8;letter-spacing:2px;text-transform:uppercase}
+.header-actions{display:flex;gap:12px}
+.btn-home{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;transition:all .3s;font-family:inherit}
+.btn-home:hover{background:rgba(255,255,255,.2)}
+
+.container{max-width:1200px;margin:0 auto;padding:40px 20px}
+
+.dashboard-hero{background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:20px;padding:50px 40px;color:#fff;margin-bottom:40px;position:relative;overflow:hidden;box-shadow:0 8px 30px rgba(26,41,66,.25)}
+.dashboard-hero::before{content:'';position:absolute;top:-50%;right:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(201,169,97,.2),transparent 70%);border-radius:50%}
+.dashboard-hero h2{font-size:38px;margin-bottom:12px;position:relative}
+.dashboard-hero p{font-size:16px;opacity:.85;max-width:600px;position:relative}
+
+.action-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin-bottom:40px}
+.action-card{background:var(--card-alt);border-radius:16px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,.06);cursor:pointer;transition:all .3s;border:2px solid transparent}
+.action-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.12);border-color:var(--accent)}
+.action-icon{width:60px;height:60px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:20px;color:#fff}
+.action-card h3{font-size:22px;margin-bottom:8px;color:var(--primary)}
+.action-card p{color:var(--text-light);font-size:14px;line-height:1.6}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+.stat-card{background:var(--card-alt);border-radius:14px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.stat-card .label{font-size:12px;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.stat-card .value{font-family:'Playfair Display',serif;font-size:32px;color:var(--primary);font-weight:bold}
+
+.view{display:none}
+.view.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.form-card{background:var(--card-alt);border-radius:16px;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,.06);margin-bottom:24px}
+.form-card h2{font-size:28px;color:var(--primary);margin-bottom:8px}
+.form-card .subtitle{color:var(--text-light);margin-bottom:32px;font-size:14px}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.form-group{display:flex;flex-direction:column}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:13px;font-weight:600;color:var(--primary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.form-group label .req{color:var(--danger)}
+.form-group input,.form-group textarea,.form-group select{padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:var(--text)}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(201,169,97,.15)}
+.form-group textarea{resize:vertical;min-height:80px}
+
+.progress-bar{background:var(--card-alt);border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.progress-steps{display:flex;justify-content:space-between;position:relative;margin-bottom:16px}
+.progress-steps::before{content:'';position:absolute;top:20px;left:5%;right:5%;height:3px;background:var(--border);z-index:0}
+.progress-step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;flex:1}
+.step-circle{width:42px;height:42px;border-radius:50%;background:#fff;border:3px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--text-light)}
+.step-label{font-size:12px;color:var(--text-light);text-align:center;font-weight:500}
+.progress-step.active .step-circle{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 4px rgba(201,169,97,.2)}
+.progress-step.active .step-label{color:var(--primary);font-weight:600}
+.progress-step.completed .step-circle{background:var(--success);border-color:var(--success);color:#fff}
+.progress-step.completed .step-label{color:var(--success)}
+
+.service-info-bar{background:linear-gradient(135deg,#fffbf0,#fff9e6);border:1px solid var(--accent);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.service-info-bar .info-item{display:flex;flex-direction:column}
+.service-info-bar .info-label{font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.service-info-bar .info-value{font-size:14px;color:var(--primary);font-weight:600}
+
+.stage-header{display:flex;align-items:center;gap:16px;margin-bottom:8px;flex-wrap:wrap}
+.stage-badge{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;letter-spacing:.5px}
+
+.question-card{background:var(--card-alt);border-radius:14px;padding:24px;margin-bottom:16px;border-left:4px solid var(--accent);box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.question-card.answered{border-left-color:var(--success)}
+.question-number{display:inline-block;background:var(--primary);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:12px}
+.question-text{font-size:15px;line-height:1.6;color:var(--text);margin-bottom:16px;font-weight:500}
+.options{display:flex;flex-wrap:wrap;gap:10px}
+.option{position:relative;cursor:pointer}
+.option input{position:absolute;opacity:0;cursor:pointer}
+.option-label{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#fff;border:2px solid var(--border);border-radius:10px;font-size:14px;transition:all .2s;user-select:none;color:var(--text)}
+.option:hover .option-label{border-color:var(--accent);background:#fffbf0}
+.option input:checked+.option-label{background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;border-color:var(--accent);box-shadow:0 4px 12px rgba(201,169,97,.3)}
+.checkbox-icon{width:18px;height:18px;border:2px solid currentColor;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+.option input:checked+.option-label .checkbox-icon::after{content:'✓';font-weight:bold}
+
+.conditional-input{margin-top:12px;padding:12px;background:#fffbf0;border-radius:10px;border:1px dashed var(--accent);display:none}
+.conditional-input.show{display:block}
+.conditional-input input,.conditional-input textarea{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;background:#fff;color:var(--text)}
+.conditional-input textarea{min-height:60px;resize:vertical}
+
+.preventive-card{background:linear-gradient(135deg,#fff9e6,#fffbf0);border:2px dashed var(--accent);border-radius:14px;padding:24px;margin-top:24px}
+.preventive-card h4{color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:16px}
+.preventive-card p{color:var(--text);margin-bottom:16px;font-size:14px;line-height:1.6}
+
+.btn{padding:14px 28px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;font-family:inherit}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none!important}
+.btn-accent{background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff}
+.btn-accent:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 20px rgba(201,169,97,.4)}
+.btn-outline{background:var(--card-alt);color:var(--primary);border:2px solid var(--border)}
+.btn-outline:hover:not(:disabled){border-color:var(--primary);background:#fff}
+.btn-danger{background:var(--card-alt);color:var(--danger);border:2px solid var(--danger)}
+.btn-danger:hover:not(:disabled){background:var(--danger);color:#fff}
+.btn-success{background:linear-gradient(135deg,var(--success),#059669);color:#fff}
+.btn-success:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 20px rgba(16,185,129,.3)}
+
+.form-actions{display:flex;justify-content:space-between;gap:12px;margin-top:32px;padding-top:24px;border-top:1px solid var(--border);flex-wrap:wrap}
+
+.search-bar{background:var(--card-alt);border-radius:14px;padding:20px;margin-bottom:24px;box-shadow:0 2px 10px rgba(0,0,0,.05);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.search-input{flex:1;min-width:250px;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:var(--text)}
+.search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(201,169,97,.15)}
+
+.service-list{display:flex;flex-direction:column;gap:12px}
+.service-item{background:var(--card-alt);border-radius:14px;padding:20px 24px;box-shadow:0 2px 10px rgba(0,0,0,.05);cursor:pointer;transition:all .2s;display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;border-left:4px solid var(--accent)}
+.service-item:hover{transform:translateX(4px);box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.service-number{background:var(--primary);color:#fff;padding:8px 14px;border-radius:10px;font-weight:600;font-size:13px;white-space:nowrap}
+.service-info h4{font-size:16px;color:var(--primary);margin-bottom:4px}
+.service-info p{font-size:13px;color:var(--text-light)}
+.service-status{display:flex;gap:6px;align-items:center}
+.stage-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#fff;background:var(--border)}
+.stage-dot.done{background:var(--success)}
+.stage-dot.current{background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(201,169,97,.5)}50%{box-shadow:0 0 0 8px rgba(201,169,97,0)}}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-light)}
+.empty-state .icon{font-size:60px;margin-bottom:16px;opacity:.3}
+.empty-state h3{color:var(--primary);margin-bottom:8px}
+
+/* ====== NUEVO: Sistema de Tabs para el detalle ====== */
+.detail-tabs{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;background:var(--card-alt);padding:8px;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.tab-btn{flex:1;min-width:140px;padding:12px 20px;background:transparent;border:2px solid transparent;border-radius:10px;font-size:14px;font-weight:600;color:var(--text-light);cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+.tab-btn:hover{background:#fff;color:var(--primary)}
+.tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 12px rgba(26,41,66,.2)}
+.tab-btn .tab-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.tab-btn.active .tab-badge{background:rgba(255,255,255,.25);color:#fff}
+.tab-badge.done{background:var(--success-bg);color:var(--success-text)}
+.tab-badge.pending{background:var(--warning-bg);color:var(--warning-text)}
+.tab-content{display:none;animation:fadeIn .3s ease}
+.tab-content.active{display:block}
+
+.detail-section{background:var(--card-alt);border-radius:14px;padding:24px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.detail-section h3{color:var(--primary);margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--border);font-size:18px;display:flex;align-items:center;gap:10px}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.detail-item .label{font-size:11px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.detail-item .value{font-size:14px;color:var(--text);font-weight:500}
+
+.detail-question{padding:14px 16px;margin-bottom:10px;border-radius:10px;border-left:4px solid var(--border);background:#fff;transition:all .2s}
+.detail-question.positive{border-left-color:var(--success);background:var(--success-bg)}
+.detail-question.warning{border-left-color:var(--warning);background:var(--warning-bg)}
+.detail-question.negative{border-left-color:var(--danger);background:var(--danger-bg)}
+.detail-question .q{font-size:13px;color:var(--text-light);margin-bottom:6px;line-height:1.5}
+.detail-question .a{font-size:14px;font-weight:600;padding:6px 12px;border-radius:6px;display:inline-block}
+.detail-question.positive .a{color:var(--success-text);background:rgba(16,185,129,.15)}
+.detail-question.warning .a{color:var(--warning-text);background:rgba(245,158,11,.15)}
+.detail-question.negative .a{color:var(--danger-text);background:rgba(220,38,38,.15)}
+.detail-question .justification{margin-top:10px;padding:10px 14px;background:rgba(255,255,255,.7);border-radius:8px;border-left:3px solid currentColor;font-size:13px;line-height:1.5;font-style:italic}
+.detail-question.negative .justification{color:var(--danger-text)}
+.detail-question.warning .justification{color:var(--warning-text)}
+.detail-question.positive .justification{color:var(--success-text)}
+.detail-question .justification strong{font-style:normal;display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+
+.preventive-block{background:linear-gradient(135deg,#fff9e6,#fffbf0);border:2px dashed var(--accent);border-radius:12px;padding:18px;margin-top:16px}
+.preventive-block h5{color:var(--primary);font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.preventive-block .prev-q{font-size:13px;color:var(--text-light);margin-bottom:8px;font-style:italic}
+.preventive-block .prev-a{display:inline-block;padding:6px 12px;border-radius:6px;font-size:13px;font-weight:600;margin-bottom:8px}
+.preventive-block .prev-a.yes{background:var(--warning-bg);color:var(--warning-text)}
+.preventive-block .prev-a.no{background:var(--success-bg);color:var(--success-text)}
+.preventive-block .prev-detail{margin-top:8px;padding:10px;background:rgba(255,255,255,.7);border-radius:8px;border-left:3px solid var(--warning);font-size:13px;color:var(--warning-text);font-style:italic}
+
+.toast{position:fixed;bottom:30px;right:30px;background:var(--primary);color:#fff;padding:16px 24px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2);transform:translateY(100px);opacity:0;transition:all .3s;z-index:1000;max-width:400px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+.toast.loading{background:var(--primary-light)}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card-alt);border-radius:16px;padding:32px;max-width:500px;width:100%}
+.modal h3{color:var(--primary);margin-bottom:12px}
+.modal p{color:var(--text-light);margin-bottom:24px}
+.modal-actions{display:flex;gap:12px;justify-content:flex-end}
+
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){
+  .header{padding:16px 20px}
+  .logo-text h1{font-size:16px}
+  .logo-text p{font-size:10px}
+  .container{padding:20px 12px}
+  .dashboard-hero{padding:30px 24px}
+  .dashboard-hero h2{font-size:26px}
+  .form-card{padding:24px 20px}
+  .service-item{grid-template-columns:1fr;gap:12px}
+  .tab-btn{min-width:100px;padding:10px 12px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="logo" id="logoHome"><div class="logo-icon">B</div><div class="logo-text"><h1>BETHEL FONTIBÓN</h1><p>Auditoría y Seguimiento</p></div></div>
+  <div class="header-actions"><button class="btn-home" id="btnHomeHeader">🏠 Inicio</button><button class="btn-home" id="btnHistoryHeader">📋 Histórico</button></div>
+</header>
+
+<div id="view-dashboard" class="view active"><div class="container">
+  <div class="dashboard-hero"><h2>Bienvenido al Sistema de Auditoría</h2><p>Plataforma para el seguimiento y evaluación del servicio funerario en sus tres etapas críticas.</p></div>
+  <div class="action-grid">
+    <div class="action-card" id="btnCreateService"><div class="action-icon">➕</div><h3>Crear Nuevo Servicio</h3><p>Registrar un nuevo servicio funerario e iniciar el proceso de auditoría desde la Etapa 1.</p></div>
+    <div class="action-card" id="btnViewHistory"><div class="action-icon">📚</div><h3>Histórico de Servicios</h3><p>Consultar, buscar y continuar servicios previamente registrados en cualquier etapa.</p></div>
+  </div>
+  <div class="stats-grid" id="statsGrid"></div>
+</div></div>
+
+<div id="view-register" class="view"><div class="container"><div class="form-card">
+  <h2>📝 Registro del Servicio</h2><p class="subtitle">Complete los datos del servicio y del familiar para iniciar la auditoría</p>
+  <form id="registerForm">
+    <div class="form-grid">
+      <div class="form-group"><label>Fecha del Servicio <span class="req">*</span></label><input type="date" id="fecha" required></div>
+      <div class="form-group"><label>Número de Servicio <span class="req">*</span></label><input type="text" id="numeroServicio" placeholder="Ej: SF-2026-001" required></div>
+      <div class="form-group full"><label>Nombre del Fallecido <span class="req">*</span></label><input type="text" id="nombreFallecido" placeholder="Nombre completo" required></div>
+      <div class="form-group"><label>Nombre del Familiar <span class="req">*</span></label><input type="text" id="nombreFamiliar" placeholder="Nombre completo" required></div>
+      <div class="form-group"><label>Parentesco <span class="req">*</span></label><input type="text" id="parentesco" placeholder="Ej: Hijo, Cónyuge" required></div>
+      <div class="form-group"><label>Teléfono (Opcional)</label><input type="tel" id="telefono" placeholder="Número de contacto"></div>
+      <div class="form-group"><label>Plan Contratado <span class="req">*</span></label><input type="text" id="planContratado" placeholder="Nombre del plan" required></div>
+      <div class="form-group"><label>Coordinador <span class="req">*</span></label><input type="text" id="coordinador" required></div>
+      <div class="form-group"><label>Auditor / Responsable <span class="req">*</span></label><input type="text" id="auditor" required></div>
+      <div class="form-group"><label>Fecha de Auditoría <span class="req">*</span></label><input type="date" id="fechaAuditoria" required></div>
+      <div class="form-group"><label>Hora</label><input type="time" id="hora"></div>
+      <div class="form-group"><label>Lugar</label><input type="text" id="lugar" placeholder="Ubicación"></div>
+      <div class="form-group full"><label>Observación Inicial</label><textarea id="observacionInicial" placeholder="Notas iniciales..."></textarea></div>
+    </div>
+    <div class="form-actions"><button type="button" class="btn btn-outline" id="btnCancelRegister">← Cancelar</button><button type="submit" class="btn btn-accent" id="btnSubmitRegister">Guardar y Continuar → Etapa 1</button></div>
+  </form>
+</div></div></div>
+
+<div id="view-stage1" class="view"><div class="container">
+  <div class="progress-bar"><div class="progress-steps" id="progressSteps1"></div></div><div id="serviceInfoBar1"></div>
+  <div class="form-card"><div class="stage-header"><span class="stage-badge">ETAPA 1</span><h2>🚐 Recogida del Cuerpo</h2></div><p class="subtitle">Evalúe la comunicación, puntualidad y presentación durante la recogida</p><div id="stage1Questions"></div>
+  <div class="form-actions"><button type="button" class="btn btn-outline" id="btnSaveExit1">💾 Guardar y Salir</button><button type="button" class="btn btn-accent" id="btnSaveContinue1">Guardar y Continuar → Etapa 2</button></div></div>
+</div></div>
+
+<div id="view-stage2" class="view"><div class="container">
+  <div class="progress-bar"><div class="progress-steps" id="progressSteps2"></div></div><div id="serviceInfoBar2"></div>
+  <div class="form-card"><div class="stage-header"><span class="stage-badge">ETAPA 2</span><h2>⚱️ Prestación y Desarrollo del Servicio</h2></div><p class="subtitle">Evalúe la coordinación, servicios prestados y atención durante la velación</p><div id="stage2Questions"></div>
+  <div class="form-actions"><button type="button" class="btn btn-outline" id="btnSaveExit2">💾 Guardar y Salir</button><button type="button" class="btn btn-accent" id="btnSaveContinue2">Guardar y Continuar → Etapa 3</button></div></div>
+</div></div>
+
+<div id="view-stage3" class="view"><div class="container">
+  <div class="progress-bar"><div class="progress-steps" id="progressSteps3"></div></div><div id="serviceInfoBar3"></div>
+  <div class="form-card"><div class="stage-header"><span class="stage-badge">ETAPA 3</span><h2>🕊️ Cierre y Satisfacción del Servicio</h2></div><p class="subtitle">Evaluación final, quejas, reclamos y registro de alertas</p><div id="stage3Questions"></div>
+  <div class="form-actions"><button type="button" class="btn btn-outline" id="btnSaveExit3">💾 Guardar y Salir</button><button type="button" class="btn btn-success" id="btnFinishService">✓ Finalizar Servicio</button></div></div>
+</div></div>
+
+<div id="view-history" class="view"><div class="container"><div class="form-card">
+  <h2>📚 Histórico de Servicios</h2><p class="subtitle">Busque, consulte y continúe servicios registrados</p>
+  <div class="search-bar"><input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar por número, nombre o auditor..."><button type="button" class="btn btn-outline" id="btnClearSearch">Limpiar</button></div>
+  <div id="historyList"></div>
+</div></div></div>
+
+<div id="view-detail" class="view"><div class="container"><div class="form-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div><h2 id="detailTitle"></h2><p class="subtitle" id="detailSubtitle"></p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" class="btn btn-outline" id="btnBackHistory">← Volver</button>
+      <button type="button" class="btn btn-danger" id="btnDeleteService">🗑️ Eliminar</button>
+      <button type="button" class="btn btn-accent" id="btnContinueService">Continuar →</button>
+    </div>
+  </div>
+  
+  <!-- NUEVO: Sistema de Tabs -->
+  <div class="detail-tabs" id="detailTabs"></div>
+  <div id="tabContents"></div>
+</div></div></div>
+
+<div class="modal-overlay" id="modal"><div class="modal"><h3>Confirmar</h3><p>¿Está seguro de eliminar este servicio? Esta acción no se puede deshacer.</p><div class="modal-actions"><button type="button" class="btn btn-outline" id="modalCancel">Cancelar</button><button type="button" class="btn btn-danger" id="modalConfirm">Confirmar</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+const SUPABASE_URL='https://thhmvxumeqrynwaloidw.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoaG12eHVtZXFyeW53YWxvaWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNTEyNTgsImV4cCI6MjEwNDgyNzI1OH0.XlrOEqHdPHN8HJVDeqbinDid482iujSKk7CF-yyQ6yc';
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+let currentServiceId=null;
+let currentAnswers={};
+let currentServiceData=null;
+
+const QUESTIONS={
+stage1:[
+{id:'q1',text:'¿Cómo fue la comunicación con el coordinador durante la coordinación de la recogida?',options:['Excelente','Buena','Regular','Deficiente']},
+{id:'q2',text:'¿La información proporcionada por el coordinador fue clara, precisa y oportuna?',options:['Sí','Parcialmente','No']},
+{id:'q3',text:'¿El coordinador resolvió adecuadamente las dudas o inquietudes de la familia?',options:['Sí','Parcialmente','No','No aplica']},
+{id:'q4',text:'¿La carroza llegó dentro del tiempo establecido?',options:['Sí','Parcialmente','No']},
+{id:'q5',text:'¿La carroza se encontraba limpia y en adecuadas condiciones de presentación?',options:['Sí','Parcialmente','No']},
+{id:'q6',text:'¿La carroza se encontraba en buen estado de conservación?',options:['Sí','Parcialmente','No']},
+{id:'q7',text:'¿La presentación personal del conductor fue adecuada y acorde con los estándares institucionales?',options:['Sí','Parcialmente','No']},
+{id:'q8',text:'¿La atención brindada por el conductor fue amable, respetuosa y profesional?',options:['Excelente','Buena','Regular','Deficiente']},
+{id:'q9',text:'¿El conductor explicó claramente a la familia los pasos que debía seguir durante el proceso?',options:['Sí','Parcialmente','No']},
+{id:'q10',text:'¿El conductor resolvió adecuadamente las inquietudes de la familia?',options:['Sí','Parcialmente','No','No aplica']}
+],
+stage2:[
+{id:'q11',text:'¿La coordinación general del servicio fue clara y precisa?',options:['Sí','Parcialmente','No']},
+{id:'q12',text:'¿La información proporcionada por el coordinador fue suficiente para conocer cómo se desarrollaría el servicio?',options:['Sí','Parcialmente','No']},
+{id:'q13',text:'¿Los tiempos acordados con el coordinador de servicios fueron cumplidos?',options:['Sí','Parcialmente','No']},
+{id:'q14',text:'¿Los elementos y servicios recibidos corresponden a los contratados en su plan de previsión?',options:['Sí','Parcialmente','No']},
+{id:'q15',text:'¿Recibió información clara sobre los servicios incluidos en su plan?',options:['Sí','Parcialmente','No']},
+{id:'q16',text:'¿Se presentó algún elemento o servicio diferente al inicialmente acordado?',options:['No','Sí'],conditional:true,conditionalLabel:'¿Cuál?'},
+{id:'q17',text:'¿La sala de velación asignada fue de su agrado?',options:['Excelente','Buena','Regular','Deficiente']},
+{id:'q18',text:'¿La sala se encontraba limpia, organizada y en condiciones adecuadas?',options:['Sí','Parcialmente','No']},
+{id:'q19',text:'¿La familia contó con los elementos necesarios durante la velación?',options:['Sí','Parcialmente','No']},
+{id:'q20',text:'¿El cofre seleccionado fue de su agrado?',options:['Sí','Parcialmente','No']},
+{id:'q21',text:'¿El arreglo y presentación del cuerpo fueron de su agrado?',options:['Sí','Parcialmente','No']},
+{id:'q22',text:'¿La presentación del cuerpo correspondió a lo solicitado por la familia?',options:['Sí','Parcialmente','No']},
+{id:'q23',text:'¿Los arreglos florales recibidos fueron de su agrado?',options:['Sí','Parcialmente','No']},
+{id:'q24',text:'¿Los arreglos florales correspondieron a lo solicitado o contratado?',options:['Sí','Parcialmente','No']},
+{id:'q25',text:'¿La presentación y ubicación de las flores fueron adecuadas?',options:['Sí','Parcialmente','No']},
+{id:'q26',text:'¿Los funcionarios de la funeraria fueron amables y respetuosos durante la prestación del servicio?',options:['Excelente','Buena','Regular','Deficiente']},
+{id:'q27',text:'¿El personal estuvo atento a las necesidades de la familia?',options:['Sí','Parcialmente','No']},
+{id:'q28',text:'¿El personal respondió adecuadamente a sus preguntas y solicitudes?',options:['Sí','Parcialmente','No']},
+{id:'q29',text:'¿En algún momento sintió falta de acompañamiento por parte del personal?',options:['No','Sí'],conditional:true,conditionalLabel:'¿Cuál?'},
+{id:'q30',text:'¿El destino final correspondió al acordado con la familia?',options:['Sí','Parcialmente','No']},
+{id:'q31',text:'¿La información relacionada con el destino final fue clara y suficiente?',options:['Sí','Parcialmente','No']},
+{id:'q32',text:'¿Los tiempos y condiciones relacionados con el destino final fueron los acordados?',options:['Sí','Parcialmente','No']}
+],
+stage3:[
+{id:'q33',text:'En términos generales, ¿cómo califica el servicio recibido por Bethel?',options:['Excelente','Bueno','Regular','Deficiente']},
+{id:'q34',text:'¿El servicio cumplió con sus expectativas?',options:['Sí','Parcialmente','No']},
+{id:'q35',text:'¿Se sintió acompañado por Bethel durante todo el proceso?',options:['Sí','Parcialmente','No']},
+{id:'q36',text:'¿Considera que el servicio contratado fue prestado de acuerdo con lo establecido en su plan?',options:['Sí','Parcialmente','No']}
+]
+};
+
+const PREV={
+1:'¿Hay algún aspecto que no esté claro o que quisiera que revisemos para evitar inconvenientes posteriormente?',
+2:['¿Hay algún aspecto de la sala o de sus condiciones que podamos solucionar ahora para que la familia pueda continuar el servicio con tranquilidad?','Antes de continuar con el servicio, ¿hay algún aspecto relacionado con el cofre, arreglo o presentación del cuerpo que quisiera que revisemos?','¿Hay algún cambio o ajuste que quisiera solicitar en los arreglos florales antes de continuar con el servicio?','¿Hay algo que necesite en este momento y que nuestro equipo aún no haya atendido?','¿Hay alguna información o aspecto del destino final que quisiera confirmar o aclarar antes de realizar el traslado?'],
+3:'Antes de dar por finalizado el servicio, ¿hay algo que podamos solucionar, aclarar o mejorar para usted o su familia?'
+};
+
+function showView(n){document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});var t=document.getElementById('view-'+n);if(t){t.classList.add('active');window.scrollTo(0,0);if(n==='dashboard')renderDash();if(n==='history')renderHist();}}
+
+async function renderDash(){
+  try{
+    const{count:total}=await supabase.from('servicios').select('*',{count:'exact',head:true});
+    const{count:completed}=await supabase.from('servicios').select('*',{count:'exact',head:true}).eq('completed',true);
+    const{count:pending1}=await supabase.from('servicios').select('*',{count:'exact',head:true}).is('stage1',null);
+    const t=total||0,c=completed||0,p=t-c,w=pending1||0;
+    document.getElementById('statsGrid').innerHTML='<div class="stat-card"><div class="label">Total Servicios</div><div class="value">'+t+'</div></div><div class="stat-card"><div class="label">Completados</div><div class="value" style="color:var(--success)">'+c+'</div></div><div class="stat-card"><div class="label">En Progreso</div><div class="value" style="color:var(--accent)">'+p+'</div></div><div class="stat-card"><div class="label">Pendientes Etapa 1</div><div class="value" style="color:var(--warning)">'+w+'</div></div>';
+  }catch(e){console.error(e);}
+}
+
+function startNew(){
+  currentServiceId=null;currentAnswers={};currentServiceData=null;
+  var f=document.getElementById('registerForm');if(f)f.reset();
+  var d=new Date();var ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  var fi=document.getElementById('fecha');var fa=document.getElementById('fechaAuditoria');
+  if(fi)fi.value=ds;if(fa)fa.value=ds;
+  showView('register');
+}
+
+async function doRegister(e){
+  e.preventDefault();
+  var btn=document.getElementById('btnSubmitRegister');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Guardando...';
+  try{
+    var data={
+      fecha:document.getElementById('fecha').value,
+      numero_servicio:document.getElementById('numeroServicio').value,
+      nombre_fallecido:document.getElementById('nombreFallecido').value,
+      nombre_familiar:document.getElementById('nombreFamiliar').value,
+      parentesco:document.getElementById('parentesco').value,
+      telefono:document.getElementById('telefono').value,
+      plan_contratado:document.getElementById('planContratado').value,
+      coordinador:document.getElementById('coordinador').value,
+      auditor:document.getElementById('auditor').value,
+      fecha_auditoria:document.getElementById('fechaAuditoria').value,
+      hora:document.getElementById('hora').value,
+      lugar:document.getElementById('lugar').value,
+      observacion_inicial:document.getElementById('observacionInicial').value
+    };
+    var ns={id:'svc-'+Date.now(),completed:false,stage1:null,stage2:null,stage3:null,...data};
+    const{error}=await supabase.from('servicios').insert([ns]);
+    if(error)throw error;
+    currentServiceId=ns.id;
+    toast('✓ Servicio registrado en la nube','success');
+    goStage(1);showView('stage1');
+  }catch(err){console.error(err);toast('❌ Error: '+err.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='Guardar y Continuar → Etapa 1';}
+}
+
+function progressBar(sn){
+  return '<div class="progress-step completed"><div class="step-circle">✓</div><div class="step-label">Registro</div></div>'+
+         '<div class="progress-step '+(sn===1?'active':'')+'"><div class="step-circle">1</div><div class="step-label">Etapa 1</div></div>'+
+         '<div class="progress-step '+(sn===2?'active':'')+'"><div class="step-circle">2</div><div class="step-label">Etapa 2</div></div>'+
+         '<div class="progress-step '+(sn===3?'active':'')+'"><div class="step-circle">3</div><div class="step-label">Etapa 3</div></div>';
+}
+
+function infoBar(sn){
+  return '<div class="service-info-bar"><div class="info-item"><span class="info-label">Servicio</span><span class="info-value" id="info-num">...</span></div><div class="info-item"><span class="info-label">Fallecido</span><span class="info-value" id="info-nom">...</span></div><div class="info-item"><span class="info-label">Auditor</span><span class="info-value" id="info-aud">...</span></div></div>';
+}
+
+async function updateInfoBar(){
+  if(!currentServiceId)return;
+  const{data,error}=await supabase.from('servicios').select('numero_servicio,nombre_fallecido,auditor').eq('id',currentServiceId).single();
+  if(data){
+    var n=document.getElementById('info-num'),m=document.getElementById('info-nom'),a=document.getElementById('info-aud');
+    if(n)n.textContent='#'+data.numero_servicio;
+    if(m)m.textContent=data.nombre_fallecido;
+    if(a)a.textContent=data.auditor;
+  }
+}
+
+function renderQ(sn,ct,ans){
+  ans=ans||{};var qs=QUESTIONS['stage'+sn];var h='';
+  qs.forEach(function(q,idx){
+    var a=ans[q.id]||{};var sv=a.value;var ok=sv!==undefined&&sv!==null;
+    var qn=sn===1?idx+1:sn===2?idx+11:idx+33;
+    h+='<div class="question-card'+(ok?' answered':'')+'" id="qcard-'+q.id+'"><span class="question-number">Pregunta '+qn+'</span><div class="question-text">'+q.text+'</div><div class="options">';
+    q.options.forEach(function(o){
+      h+='<label class="option"><input type="radio" name="'+q.id+'" value="'+o+'"'+(sv===o?' checked':'')+' data-qid="'+q.id+'" data-cond="'+(q.conditional||false)+'"><span class="option-label"><span class="checkbox-icon"></span>'+o+'</span></label>';
+    });
+    h+='</div>';
+    if(q.conditional){
+      h+='<div class="conditional-input'+(sv==='Sí'?' show':'')+'" id="cond-'+q.id+'"><label style="font-size:12px;color:var(--text-light);margin-bottom:6px;display:block">'+q.conditionalLabel+'</label><input type="text" value="'+(a.detail||'')+'" data-qid="'+q.id+'" class="cdi" placeholder="Especifique..."></div>';
+    }
+    h+='</div>';
+  });
+  h+='<div class="preventive-card"><h4>⚠️ Pregunta'+(sn===2?'s':'')+' Preventiva'+(sn===2?'s':'')+' — Etapa '+sn+'</h4>';
+  if(sn===2){
+    PREV[2].forEach(function(t,i){
+      var pk='prev2_'+i;var pa=ans[pk]||{};var pv=pa.value;
+      h+='<p style="margin-top:16px"><strong>'+(i+1)+'.</strong> '+t+'</p><div class="options"><label class="option"><input type="radio" name="'+pk+'" value="No"'+(pv==='No'?' checked':'')+' data-pk="'+pk+'"><span class="option-label"><span class="checkbox-icon"></span>No</span></label><label class="option"><input type="radio" name="'+pk+'" value="Sí"'+(pv==='Sí'?' checked':'')+' data-pk="'+pk+'"><span class="option-label"><span class="checkbox-icon"></span>Sí</span></label></div><div class="conditional-input'+(pv==='Sí'?' show':'')+'" id="cond-'+pk+'"><label style="font-size:12px;color:var(--text-light);margin-bottom:6px;display:block">¿Cuál?</label><textarea data-pk="'+pk+'" class="pdi">'+(pa.detail||'')+'</textarea></div>';
+    });
+  }else{
+    var pk='prev'+sn;var pa=ans[pk]||{};var pv=pa.value;var nl=sn===1?'No, todo está claro.':'No, todo está conforme.';
+    h+='<p>'+PREV[sn]+'</p><div class="options"><label class="option"><input type="radio" name="'+pk+'" value="No"'+(pv==='No'?' checked':'')+' data-pk="'+pk+'"><span class="option-label"><span class="checkbox-icon"></span>'+nl+'</span></label><label class="option"><input type="radio" name="'+pk+'" value="Sí"'+(pv==='Sí'?' checked':'')+' data-pk="'+pk+'"><span class="option-label"><span class="checkbox-icon"></span>Sí</span></label></div><div class="conditional-input'+(pv==='Sí'?' show':'')+'" id="cond-'+pk+'"><label style="font-size:12px;color:var(--text-light);margin-bottom:6px;display:block">¿Cuál?</label><textarea data-pk="'+pk+'" class="pdi">'+(pa.detail||'')+'</textarea></div>';
+  }
+  h+='</div>';
+  if(sn===3){
+    var qa=ans.queja||{};var aa=ans.alerta||{};
+    h+='<div class="preventive-card" style="background:linear-gradient(135deg,#fef2f2,#fff5f5);border-color:var(--danger)"><h4 style="color:var(--danger)">📝 Quejas, Reclamos, Sugerencias y Felicitaciones</h4><p>¿Tiene alguna queja, reclamo, sugerencia, felicitación o comentario que podamos atender?</p><div class="options"><label class="option"><input type="radio" name="queja_resp" value="No"'+(qa.resp==='No'?' checked':'')+' data-qr="1"><span class="option-label"><span class="checkbox-icon"></span>No</span></label><label class="option"><input type="radio" name="queja_resp" value="Sí"'+(qa.resp==='Sí'?' checked':'')+' data-qr="1"><span class="option-label"><span class="checkbox-icon"></span>Sí</span></label></div><div class="conditional-input'+(qa.resp==='Sí'?' show':'')+'" id="cond-queja"><label style="font-size:12px;color:var(--text-light);margin-bottom:6px;display:block">Descripción:</label><textarea id="qDet">'+(qa.detail||'')+'</textarea><label style="font-size:12px;color:var(--text-light);margin:10px 0 6px;display:block">Clasificación:</label><div class="options" style="margin-top:6px">'+['Queja','Reclamo','Sugerencia','Felicitación','Solicitud','Oportunidad de mejora'].map(function(c){return '<label class="option"><input type="radio" name="queja_clasif" value="'+c+'"'+(qa.clasif===c?' checked':'')+' data-qc="'+c+'"><span class="option-label"><span class="checkbox-icon"></span>'+c+'</span></label>';}).join('')+'</div></div></div>';
+    h+='<div class="preventive-card" style="background:linear-gradient(135deg,#fef3c7,#fffbeb);border-color:var(--warning)"><h4 style="color:var(--warning)">🚨 Registro de Alerta y Acción</h4><p><strong>Resultado de la auditoría:</strong></p><div class="options">'+['Sin novedades','Alerta preventiva','Inconformidad/novedad'].map(function(r){return '<label class="option"><input type="radio" name="resultado" value="'+r+'"'+(aa.resultado===r?' checked':'')+' data-ar="'+r+'"><span class="option-label"><span class="checkbox-icon"></span>'+r+'</span></label>';}).join('')+'</div><div style="margin-top:16px"><label style="font-size:13px;font-weight:600;color:var(--primary);display:block;margin-bottom:8px">Principales novedades identificadas:</label><textarea id="al-nov" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;min-height:60px">'+(aa.novedades||'')+'</textarea></div><div style="margin-top:16px"><label style="font-size:13px;font-weight:600;color:var(--primary);display:block;margin-bottom:8px">Acciones correctivas/preventivas:</label><textarea id="al-acc" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;min-height:60px">'+(aa.acciones||'')+'</textarea></div><div class="form-grid" style="margin-top:16px"><div class="form-group"><label>Responsable</label><input type="text" id="al-resp" value="'+(aa.responsable||'')+'"></div><div class="form-group"><label>Hora de Reporte</label><input type="time" id="al-hr" value="'+(aa.horaReporte||'')+'"></div><div class="form-group"><label>Hora de Solución</label><input type="time" id="al-hs" value="'+(aa.horaSolucion||'')+'"></div><div class="form-group"><label>¿Se solucionó?</label><select id="al-sol"><option value="">Seleccione</option><option'+(aa.solucionado==='Sí'?' selected':'')+'>Sí</option><option'+(aa.solucionado==='No'?' selected':'')+'>No</option><option'+(aa.solucionado==='En proceso'?' selected':'')+'>En proceso</option></select></div></div><div class="form-grid" style="margin-top:16px"><div class="form-group"><label>Fecha de Seguimiento</label><input type="date" id="al-fs" value="'+(aa.fechaSeguimiento||'')+'"></div></div><div style="margin-top:16px"><label style="font-size:13px;font-weight:600;color:var(--primary);display:block;margin-bottom:8px">Observaciones finales:</label><textarea id="al-obs" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;min-height:80px">'+(aa.observaciones||'')+'</textarea></div></div>';
+  }
+  ct.innerHTML=h;bindQ(sn);
+}
+
+function bindQ(sn){
+  var ct=document.getElementById('stage'+sn+'Questions');if(!ct)return;
+  ct.addEventListener('change',function(e){
+    var t=e.target;if(t.type!=='radio')return;var v=t.value;
+    if(t.dataset.qid){
+      var qid=t.dataset.qid;var hc=t.dataset.cond==='true';
+      if(!currentAnswers[qid])currentAnswers[qid]={};
+      currentAnswers[qid].value=v;if(!hc)delete currentAnswers[qid].detail;
+      var cd=document.getElementById('qcard-'+qid);if(cd)cd.classList.add('answered');
+      if(hc){var cn=document.getElementById('cond-'+qid);if(cn){if(v==='Sí')cn.classList.add('show');else{cn.classList.remove('show');delete currentAnswers[qid].detail;}}}
+    }
+    if(t.dataset.pk){
+      var pk=t.dataset.pk;if(!currentAnswers[pk])currentAnswers[pk]={};
+      currentAnswers[pk].value=v;if(v!=='Sí')delete currentAnswers[pk].detail;
+      var cn=document.getElementById('cond-'+pk);if(cn){if(v==='Sí')cn.classList.add('show');else cn.classList.remove('show');}
+    }
+    if(t.dataset.qr){
+      if(!currentAnswers.queja)currentAnswers.queja={};currentAnswers.queja.resp=v;
+      var cn=document.getElementById('cond-queja');if(cn){if(v==='Sí')cn.classList.add('show');else{cn.classList.remove('show');delete currentAnswers.queja.detail;delete currentAnswers.queja.clasif;}}
+    }
+    if(t.dataset.qc){if(!currentAnswers.queja)currentAnswers.queja={};currentAnswers.queja.clasif=t.dataset.qc;}
+    if(t.dataset.ar){if(!currentAnswers.alerta)currentAnswers.alerta={};currentAnswers.alerta.resultado=t.dataset.ar;}
+  });
+  ct.addEventListener('input',function(e){
+    var t=e.target;
+    if(t.classList.contains('cdi')){var qid=t.dataset.qid;if(!currentAnswers[qid])currentAnswers[qid]={};currentAnswers[qid].detail=t.value;}
+    if(t.classList.contains('pdi')){var pk=t.dataset.pk;if(!currentAnswers[pk])currentAnswers[pk]={};currentAnswers[pk].detail=t.value;}
+    if(sn===3){
+      if(t.id==='qDet'){if(!currentAnswers.queja)currentAnswers.queja={};currentAnswers.queja.detail=t.value;}
+      if(t.id&&t.id.indexOf('al-')===0){var f=t.id.substring(3);if(!currentAnswers.alerta)currentAnswers.alerta={};currentAnswers.alerta[f]=t.value;}
+    }
+  });
+  if(sn===3){var sel=document.getElementById('al-sol');if(sel)sel.addEventListener('change',function(){if(!currentAnswers.alerta)currentAnswers.alerta={};currentAnswers.alerta.solucionado=this.value;});}
+}
+
+async function goStage(sn){
+  if(!currentServiceId){toast('Error: No hay servicio activo','error');return;}
+  try{
+    const{data,error}=await supabase.from('servicios').select('stage1,stage2,stage3').eq('id',currentServiceId).single();
+    if(error)throw error;
+    currentAnswers=data['stage'+sn]?JSON.parse(JSON.stringify(data['stage'+sn])):{};
+    var c=document.getElementById('stage'+sn+'Questions');
+    if(c)renderQ(sn,c,currentAnswers);
+    var p=document.getElementById('progressSteps'+sn);
+    if(p)p.innerHTML=progressBar(sn);
+    var b=document.getElementById('serviceInfoBar'+sn);
+    if(b)b.innerHTML=infoBar(sn);
+    await updateInfoBar();
+  }catch(err){console.error(err);toast('❌ Error: '+err.message,'error');}
+}
+
+async function saveStg(sn){
+  if(!currentServiceId)return false;
+  try{
+    var u={};u['stage'+sn]=currentAnswers;u.updated_at=new Date().toISOString();
+    const{error}=await supabase.from('servicios').update(u).eq('id',currentServiceId);
+    if(error)throw error;return true;
+  }catch(err){console.error(err);toast('❌ Error: '+err.message,'error');return false;}
+}
+
+async function saveCont(sn){
+  var btn=document.getElementById('btnSaveContinue'+sn);
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Guardando...';
+  try{
+    if(await saveStg(sn)){
+      toast('✓ Etapa '+sn+' guardada','success');
+      var nx=sn+1;if(nx<=3){await goStage(nx);showView('stage'+nx);}
+    }
+  }finally{btn.disabled=false;btn.innerHTML='Guardar y Continuar → Etapa '+(sn+1);}
+}
+
+async function saveExit(sn){
+  var btn=document.getElementById('btnSaveExit'+sn);
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Guardando...';
+  try{
+    if(await saveStg(sn)){
+      toast('✓ Guardado en la nube','success');
+      currentServiceId=null;currentAnswers={};currentServiceData=null;
+      showView('dashboard');
+    }
+  }finally{btn.disabled=false;btn.innerHTML='💾 Guardar y Salir';}
+}
+
+async function finishSvc(){
+  var btn=document.getElementById('btnFinishService');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Finalizando...';
+  try{
+    if(!currentServiceId)return;
+    var u={stage3:currentAnswers,completed:true,completed_at:new Date().toISOString(),updated_at:new Date().toISOString()};
+    const{error}=await supabase.from('servicios').update(u).eq('id',currentServiceId);
+    if(error)throw error;
+    toast('✓ Servicio finalizado','success');
+    currentServiceId=null;currentAnswers={};currentServiceData=null;
+    showView('dashboard');
+  }catch(err){console.error(err);toast('❌ Error: '+err.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='✓ Finalizar Servicio';}
+}
+
+async function renderHist(){
+  var si=document.getElementById('searchInput');var q=si?si.value.toLowerCase().trim():'';
+  var list=document.getElementById('historyList');
+  list.innerHTML='<div class="empty-state"><div class="spinner" style="border-color:var(--border);border-top-color:var(--accent)"></div><h3>Cargando...</h3></div>';
+  try{
+    let query=supabase.from('servicios').select('*').order('created_at',{ascending:false});
+    if(q)query=query.or('numero_servicio.ilike.%'+q+'%,nombre_fallecido.ilike.%'+q+'%,nombre_familiar.ilike.%'+q+'%,auditor.ilike.%'+q+'%');
+    const{data,error}=await query;
+    if(error)throw error;
+    if(!data||data.length===0){
+      list.innerHTML='<div class="empty-state"><div class="icon">📭</div><h3>'+(q?'Sin resultados':'No hay servicios registrados')+'</h3><p>'+(q?'Intente con otros términos':'Cree un nuevo servicio para comenzar')+'</p></div>';
+      return;
+    }
+    list.innerHTML='<div class="service-list">'+data.map(function(s){
+      var s1=!!s.stage1,s2=!!s.stage2,s3=!!s.stage3;
+      var cs=1;if(s3)cs=4;else if(s2)cs=3;else if(s1)cs=2;
+      var ff=s.fecha?s.fecha.split('-').reverse().join('/'):'';
+      return '<div class="service-item" data-sid="'+s.id+'"><div class="service-number">#'+s.numero_servicio+'</div><div class="service-info"><h4>'+s.nombre_fallecido+'</h4><p>Familiar: '+s.nombre_familiar+' • '+s.parentesco+' • '+ff+'</p></div><div class="service-status"><div class="stage-dot'+(s1?' done':cs===1?' current':'')+'">1</div><div class="stage-dot'+(s2?' done':cs===2?' current':'')+'">2</div><div class="stage-dot'+(s3?' done':cs===3?' current':'')+'">3</div></div></div>';
+    }).join('')+'</div>';
+    document.querySelectorAll('.service-item').forEach(function(it){
+      it.addEventListener('click',function(){viewSvc(this.dataset.sid);});
+    });
+  }catch(err){console.error(err);list.innerHTML='<div class="empty-state"><h3>Error</h3><p>'+err.message+'</p></div>';}
+}
+
+// ====== NUEVO: Clasificación de respuestas para colores ======
+function classifyAnswer(value){
+  if(!value)return '';
+  var v=value.toLowerCase().trim();
+  if(v==='excelente'||v==='bueno'||v==='sí'||v==='si')return 'positive';
+  if(v==='parcialmente')return 'warning';
+  if(v==='no'||v==='deficiente'||v==='regular')return 'negative';
+  return '';
+}
+
+// ====== NUEVO: Renderizado de una etapa con justificaciones completas ======
+function renderStageDetail(sn,sd){
+  if(!sd)return '<p style="color:var(--text-light);font-style:italic;padding:20px">Esta etapa aún no ha sido completada.</p>';
+  
+  var parsed=typeof sd==='string'?JSON.parse(sd):sd;
+  var h='';
+  var qs=QUESTIONS['stage'+sn];
+  
+  qs.forEach(function(q,idx){
+    var a=parsed[q.id];
+    var qn=sn===1?idx+1:sn===2?idx+11:idx+33;
+    var cls=classifyAnswer(a?a.value:null);
+    
+    h+='<div class="detail-question '+cls+'">';
+    h+='<div class="q"><strong>P'+qn+'.</strong> '+q.text+'</div>';
+    h+='<div class="a">'+(a?a.value:'—')+'</div>';
+    
+    // Mostrar justificación si existe (preguntas condicionales)
+    if(q.conditional && a && a.detail && a.value==='Sí'){
+      h+='<div class="justification"><strong>📝 '+q.conditionalLabel+'</strong>'+escapeHtml(a.detail)+'</div>';
+    }
+    h+='</div>';
+  });
+  
+  // ====== NUEVO: Mostrar preguntas preventivas con justificaciones ======
+  if(sn===2){
+    PREV[2].forEach(function(t,i){
+      var pk='prev2_'+i;
+      var pa=parsed[pk];
+      if(pa && pa.value){
+        h+='<div class="preventive-block">';
+        h+='<h5>⚠️ Preventiva '+(i+1)+'</h5>';
+        h+='<div class="prev-q">'+t+'</div>';
+        h+='<div class="prev-a '+(pa.value==='Sí'?'yes':'no')+'">'+pa.value+'</div>';
+        if(pa.value==='Sí' && pa.detail){
+          h+='<div class="prev-detail"><strong>📝 Justificación:</strong> '+escapeHtml(pa.detail)+'</div>';
+        }
+        h+='</div>';
+      }
+    });
+  }else{
+    var pk='prev'+sn;
+    var pa=parsed[pk];
+    if(pa && pa.value){
+      h+='<div class="preventive-block">';
+      h+='<h5>⚠️ Pregunta Preventiva</h5>';
+      h+='<div class="prev-q">'+PREV[sn]+'</div>';
+      h+='<div class="prev-a '+(pa.value==='Sí'?'yes':'no')+'">'+pa.value+'</div>';
+      if(pa.value==='Sí' && pa.detail){
+        h+='<div class="prev-detail"><strong>📝 Justificación:</strong> '+escapeHtml(pa.detail)+'</div>';
+      }
+      h+='</div>';
+    }
+  }
+  
+  // ====== NUEVO: Mostrar quejas con justificación completa ======
+  if(sn===3 && parsed.queja){
+    var qa=parsed.queja;
+    h+='<div class="preventive-block" style="background:linear-gradient(135deg,#fef2f2,#fff5f5);border-color:var(--danger)">';
+    h+='<h5 style="color:var(--danger)">📝 Quejas, Reclamos, Sugerencias</h5>';
+    h+='<div class="prev-a '+(qa.resp==='Sí'?'yes':'no')+'">¿Tiene alguna queja/reclamo?: '+qa.resp+'</div>';
+    if(qa.resp==='Sí'){
+      if(qa.detail){
+        h+='<div class="prev-detail" style="border-left-color:var(--danger);color:var(--danger-text)"><strong>📝 Descripción:</strong> '+escapeHtml(qa.detail)+'</div>';
+      }
+      if(qa.clasif){
+        h+='<div style="margin-top:8px;padding:8px 12px;background:rgba(220,38,38,.1);border-radius:6px;font-size:13px;color:var(--danger-text)"><strong>Clasificación:</strong> '+qa.clasif+'</div>';
+      }
+    }
+    h+='</div>';
+  }
+  
+  // ====== NUEVO: Mostrar registro de alerta completo ======
+  if(sn===3 && parsed.alerta && Object.keys(parsed.alerta).length>0){
+    var aa=parsed.alerta;
+    h+='<div class="preventive-block" style="background:linear-gradient(135deg,#fef3c7,#fffbeb);border-color:var(--warning)">';
+    h+='<h5 style="color:var(--warning)">🚨 Registro de Alerta y Acción</h5>';
+    if(aa.resultado){
+      h+='<div class="prev-a yes"><strong>Resultado:</strong> '+aa.resultado+'</div>';
+    }
+    if(aa.novedades){
+      h+='<div class="prev-detail" style="border-left-color:var(--warning);color:var(--warning-text)"><strong>📝 Novedades:</strong> '+escapeHtml(aa.novedades)+'</div>';
+    }
+    if(aa.acciones){
+      h+='<div class="prev-detail" style="border-left-color:var(--warning);color:var(--warning-text);margin-top:6px"><strong>🔧 Acciones:</strong> '+escapeHtml(aa.acciones)+'</div>';
+    }
+    var details=[];
+    if(aa.responsable)details.push('<strong>Responsable:</strong> '+escapeHtml(aa.responsable));
+    if(aa.horaReporte)details.push('<strong>Hora reporte:</strong> '+aa.horaReporte);
+    if(aa.horaSolucion)details.push('<strong>Hora solución:</strong> '+aa.horaSolucion);
+    if(aa.solucionado)details.push('<strong>¿Solucionado?:</strong> '+aa.solucionado);
+    if(aa.fechaSeguimiento)details.push('<strong>Fecha seguimiento:</strong> '+aa.fechaSeguimiento);
+    if(details.length>0){
+      h+='<div style="margin-top:8px;padding:10px;background:rgba(255,255,255,.7);border-radius:6px;font-size:13px;color:var(--warning-text)">'+details.join(' • ')+'</div>';
+    }
+    if(aa.observaciones){
+      h+='<div class="prev-detail" style="border-left-color:var(--warning);color:var(--warning-text);margin-top:6px"><strong>💭 Observaciones:</strong> '+escapeHtml(aa.observaciones)+'</div>';
+    }
+    h+='</div>';
+  }
+  
+  return h;
+}
+
+function escapeHtml(s){
+  if(!s)return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ====== NUEVO: Sistema de Tabs ======
+function switchTab(tabId){
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active');});
+  document.getElementById('tab-btn-'+tabId).classList.add('active');
+  document.getElementById('tab-content-'+tabId).classList.add('active');
+}
+
+async function viewSvc(id){
+  currentServiceId=id;
+  try{
+    const{data:s,error}=await supabase.from('servicios').select('*').eq('id',id).single();
+    if(error)throw error;
+    if(!s)return;
+    currentServiceData=s;
+    
+    document.getElementById('detailTitle').textContent='Servicio #'+s.numero_servicio;
+    var ff=s.fecha?s.fecha.split('-').reverse().join('/'):'';
+    document.getElementById('detailSubtitle').textContent=s.nombre_fallecido+' • '+ff;
+    
+    var cb=document.getElementById('btnContinueService');
+    if(s.completed){cb.style.display='none';}
+    else{
+      cb.style.display='inline-flex';
+      if(!s.stage1)cb.textContent='Iniciar Etapa 1 →';
+      else if(!s.stage2)cb.textContent='Continuar Etapa 2 →';
+      else if(!s.stage3)cb.textContent='Continuar Etapa 3 →';
+    }
+    
+    // ====== NUEVO: Construir tabs ======
+    var tabs='<button class="tab-btn active" id="tab-btn-general" onclick="window.__switchTab(\'general\')">📋 General</button>';
+    
+    var stages=[
+      {n:1,icon:'🚐',name:'Etapa 1',data:s.stage1},
+      {n:2,icon:'⚱️',name:'Etapa 2',data:s.stage2},
+      {n:3,icon:'🕊️',name:'Etapa 3',data:s.stage3}
+    ];
+    
+    stages.forEach(function(st){
+      var badge=st.data?'<span class="tab-badge done">✓</span>':'<span class="tab-badge pending">⏳</span>';
+      tabs+='<button class="tab-btn" id="tab-btn-stage'+st.n+'" onclick="window.__switchTab(\'stage'+st.n+'\')">'+st.icon+' '+st.name+' '+badge+'</button>';
+    });
+    
+    document.getElementById('detailTabs').innerHTML=tabs;
+    
+    // ====== NUEVO: Construir contenido de cada tab ======
+    var contents='';
+    
+    // Tab General
+    contents+='<div class="tab-content active" id="tab-content-general">';
+    contents+='<div class="detail-section"><h3>📋 Datos del Servicio</h3><div class="detail-grid">';
+    contents+='<div class="detail-item"><div class="label">Fecha</div><div class="value">'+ff+'</div></div>';
+    contents+='<div class="detail-item"><div class="label">Número</div><div class="value">'+s.numero_servicio+'</div></div>';
+    contents+='<div class="detail-item"><div class="label">Fallecido</div><div class="value">'+escapeHtml(s.nombre_fallecido)+'</div></div>';
+    contents+='<div class="detail-item"><div class="label">Familiar</div><div class="value">'+escapeHtml(s.nombre_familiar)+' ('+escapeHtml(s.parentesco)+')</div></div>';
+    contents+='<div class="detail-item"><div class="label">Teléfono</div><div class="value">'+(s.telefono||'—')+'</div></div>';
+    contents+='<div class="detail-item"><div class="label">Plan</div><div class="value">'+escapeHtml(s.plan_contratado)+'</div></div>';
+    contents+='<div class="detail-item"><div class="label">Coordinador</div><div class="value">'+escapeHtml(s.coordinador)+'</div></div>';
+    contents+='<div class="detail-item"><div class="label">Auditor</div><div class="value">'+escapeHtml(s.auditor)+'</div></div>';
+    contents+='<div class="detail-item"><div class="label">Lugar</div><div class="value">'+(s.lugar?escapeHtml(s.lugar):'—')+'</div></div>';
+    contents+='<div class="detail-item"><div class="label">Estado</div><div class="value">'+(s.completed?'<span style="color:var(--success)">✓ Completado</span>':'<span style="color:var(--warning)">⏳ En progreso</span>')+'</div></div>';
+    if(s.observacion_inicial){
+      contents+='<div class="detail-item" style="grid-column:1/-1"><div class="label">Observación Inicial</div><div class="value">'+escapeHtml(s.observacion_inicial)+'</div></div>';
+    }
+    contents+='</div></div>';
+    
+    // Resumen rápido por etapa
+    contents+='<div class="detail-section"><h3>📊 Resumen por Etapa</h3>';
+    stages.forEach(function(st){
+      var status=st.data?'<span style="color:var(--success);font-weight:600">✓ Completada</span>':'<span style="color:var(--warning);font-weight:600">⏳ Pendiente</span>';
+      contents+='<div style="padding:12px;margin-bottom:8px;background:#fff;border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">';
+      contents+='<div><strong>'+st.icon+' '+st.name+':</strong> '+status+'</div>';
+      if(st.data){
+        contents+='<button class="btn btn-outline" style="padding:6px 14px;font-size:13px" onclick="window.__switchTab(\'stage'+st.n+'\')">Ver detalles →</button>';
+      }
+      contents+='</div>';
+    });
+    contents+='</div>';
+    contents+='</div>';
+    
+    // Tabs de cada etapa
+    stages.forEach(function(st){
+      var nm={1:'Recogida del Cuerpo',2:'Prestación y Desarrollo',3:'Cierre y Satisfacción'};
+      contents+='<div class="tab-content" id="tab-content-stage'+st.n+'">';
+      contents+='<div class="detail-section"><h3>'+st.icon+' Etapa '+st.n+': '+nm[st.n]+'</h3>';
+      contents+=renderStageDetail(st.n,st.data);
+      contents+='</div></div>';
+    });
+    
+    document.getElementById('tabContents').innerHTML=contents;
+    showView('detail');
+  }catch(err){console.error(err);toast('❌ Error: '+err.message,'error');}
+}
+
+// Exponer switchTab globalmente
+window.__switchTab=switchTab;
+
+function confirmDel(){
+  document.getElementById('modalConfirm').onclick=async function(){
+    var btn=this;btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Eliminando...';
+    try{
+      const{error}=await supabase.from('servicios').delete().eq('id',currentServiceId);
+      if(error)throw error;
+      closeModal();toast('✓ Eliminado','success');
+      currentServiceData=null;
+      showView('history');
+    }catch(err){toast('❌ Error: '+err.message,'error');}
+    finally{btn.disabled=false;btn.innerHTML='Confirmar';}
+  };
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+
+function toast(m,t){
+  t=t||'';var e=document.getElementById('toast');
+  if(!m){e.classList.remove('show');return;}
+  e.textContent=m;e.className='toast show '+t;
+  if(t!=='loading')setTimeout(function(){e.classList.remove('show');},3000);
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('btnCreateService').addEventListener('click',startNew);
+  document.getElementById('btnViewHistory').addEventListener('click',function(){showView('history');});
+  document.getElementById('logoHome').addEventListener('click',function(){showView('dashboard');});
+  document.getElementById('btnHomeHeader').addEventListener('click',function(){showView('dashboard');});
+  document.getElementById('btnHistoryHeader').addEventListener('click',function(){showView('history');});
+  document.getElementById('registerForm').addEventListener('submit',doRegister);
+  document.getElementById('btnCancelRegister').addEventListener('click',function(){showView('dashboard');});
+  document.getElementById('btnSaveExit1').addEventListener('click',function(){saveExit(1);});
+  document.getElementById('btnSaveContinue1').addEventListener('click',function(){saveCont(1);});
+  document.getElementById('btnSaveExit2').addEventListener('click',function(){saveExit(2);});
+  document.getElementById('btnSaveContinue2').addEventListener('click',function(){saveCont(2);});
+  document.getElementById('btnSaveExit3').addEventListener('click',function(){saveExit(3);});
+  document.getElementById('btnFinishService').addEventListener('click',finishSvc);
+  document.getElementById('searchInput').addEventListener('input',renderHist);
+  document.getElementById('btnClearSearch').addEventListener('click',function(){document.getElementById('searchInput').value='';renderHist();});
+  document.getElementById('btnBackHistory').addEventListener('click',function(){showView('history');});
+  document.getElementById('btnDeleteService').addEventListener('click',confirmDel);
+  document.getElementById('btnContinueService').addEventListener('click',function(){
+    if(!currentServiceId)return;
+    supabase.from('servicios').select('stage1,stage2,stage3').eq('id',currentServiceId).single().then(function(res){
+      if(res.data){
+        var s=res.data;
+        if(!s.stage1){goStage(1);showView('stage1');}
+        else if(!s.stage2){goStage(2);showView('stage2');}
+        else if(!s.stage3){goStage(3);showView('stage3');}
+      }
+    });
+  });
+  document.getElementById('modalCancel').addEventListener('click',closeModal);
+  renderDash();
+});
+})();
+</script>
+</body>
+</html>
